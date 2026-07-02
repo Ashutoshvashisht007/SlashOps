@@ -74,7 +74,7 @@ function CommandConfigCard({
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="font-bold tracking-tight text-slate-900">/{meta.name}</h3>
+            <h3 className="font-bold text-ink">/{meta.name}</h3>
             <Badge tone={row ? "accent" : "neutral"}>{row ? "configured" : "inherits default"}</Badge>
           </div>
           <p className="mt-0.5 text-xs text-slate-400">{meta.description}</p>
@@ -120,10 +120,10 @@ function CommandConfigCard({
         </div>
 
         <div className="flex items-center gap-3">
-          <Button variant="subtle" onClick={save} disabled={saving}>
+          <Button variant="outline" onClick={save} disabled={saving}>
             {saving ? "Saving…" : "Save rule"}
           </Button>
-          {saved && <span className="text-xs font-medium text-emerald-600">Saved ✓</span>}
+          {saved && <span className="text-xs font-medium text-emerald-700">Saved ✓</span>}
         </div>
       </div>
     </Card>
@@ -159,7 +159,7 @@ export function ConfigPanel({
     <div className="space-y-5">
       <Card className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-base font-bold tracking-tight text-slate-900">Command rules</h2>
+          <h2 className="text-base font-bold text-ink">Command rules</h2>
           <p className="text-sm text-slate-500">
             Edit behavior globally, or override it per server. Changes apply instantly.
           </p>
@@ -167,7 +167,7 @@ export function ConfigPanel({
         <select
           value={guildId ?? ""}
           onChange={(e) => onScopeChange(e.target.value || null)}
-          className="rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition focus:border-violet-300 focus:outline-none focus:ring-4 focus:ring-violet-100"
+          className="rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
         >
           <option value="">🌐 Global defaults</option>
           {guilds.map((g) => (

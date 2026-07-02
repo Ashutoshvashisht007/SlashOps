@@ -8,17 +8,20 @@ export function Card({
   children,
   className,
   interactive,
+  emphasis,
 }: {
   children: ReactNode;
   className?: string;
   interactive?: boolean;
+  /** Stronger dark-teal border for section-header cards. */
+  emphasis?: boolean;
 }) {
   return (
     <div
       className={cx(
-        "rounded-2xl border border-slate-100 bg-white/80 backdrop-blur-sm p-6",
-        "shadow-[var(--shadow-float)] transition-all duration-300 ease-out",
-        interactive && "hover:shadow-[var(--shadow-lift)] hover:-translate-y-0.5",
+        "rounded-lg bg-white p-6 shadow-[var(--shadow-card)] transition-all duration-200 ease-out",
+        emphasis ? "border-2 border-brand" : "border border-slate-300/80",
+        interactive && "hover:border-slate-400 hover:shadow-[var(--shadow-raised)]",
         className,
       )}
     >
@@ -27,7 +30,7 @@ export function Card({
   );
 }
 
-type ButtonVariant = "primary" | "ghost" | "subtle" | "danger";
+type ButtonVariant = "primary" | "outline" | "ghost" | "danger";
 
 export function Button({
   variant = "primary",
@@ -36,16 +39,17 @@ export function Button({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant }) {
   const base =
-    "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold " +
-    "transition-all duration-200 ease-out active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none " +
-    "focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-300";
+    "inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold " +
+    "transition-all duration-150 ease-out active:translate-y-px disabled:opacity-50 disabled:pointer-events-none " +
+    "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-1";
   const variants: Record<ButtonVariant, string> = {
-    primary:
-      "text-white bg-violet-700 shadow-[0_6px_20px_-6px_rgba(109,40,217,0.6)] hover:bg-violet-600 hover:shadow-[0_10px_28px_-8px_rgba(109,40,217,0.7)] hover:-translate-y-0.5",
-    ghost: "text-slate-600 hover:text-slate-900 hover:bg-slate-100",
-    subtle:
-      "text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-100 hover:-translate-y-0.5",
-    danger: "text-red-600 bg-red-50 hover:bg-red-100 border border-red-100",
+    // Solid dark teal — the single strongest action on a screen (e.g. sign in).
+    primary: "text-white bg-brand hover:bg-brand-deep shadow-sm",
+    // Outlined teal on white — the mock's standard action style.
+    outline:
+      "text-accent bg-white border-2 border-accent hover:bg-accent-soft",
+    ghost: "text-slate-600 hover:text-ink hover:bg-slate-200/60",
+    danger: "text-red-700 bg-white border-2 border-red-300 hover:bg-red-50",
   };
   return (
     <button className={cx(base, variants[variant], className)} {...props}>
@@ -54,16 +58,13 @@ export function Button({
   );
 }
 
-export function Input({
-  className,
-  ...props
-}: InputHTMLAttributes<HTMLInputElement>) {
+export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       className={cx(
-        "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900",
-        "placeholder:text-slate-400 shadow-sm transition-all duration-200",
-        "focus:outline-none focus:border-violet-300 focus:ring-4 focus:ring-violet-100",
+        "w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-ink",
+        "placeholder:text-slate-400 transition-all duration-150",
+        "focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/25",
         className,
       )}
       {...props}
@@ -72,11 +73,11 @@ export function Input({
 }
 
 const toneStyles: Record<string, string> = {
-  neutral: "bg-slate-100 text-slate-600",
-  accent: "bg-violet-50 text-violet-700",
-  warn: "bg-amber-50 text-amber-700",
-  danger: "bg-red-50 text-red-600",
-  success: "bg-emerald-50 text-emerald-700",
+  neutral: "bg-slate-200/70 text-slate-600 border border-slate-300/60",
+  accent: "bg-accent-soft text-accent border border-accent/25",
+  warn: "bg-amber-50 text-amber-800 border border-amber-200",
+  danger: "bg-red-50 text-red-700 border border-red-200",
+  success: "bg-emerald-50 text-emerald-800 border border-emerald-200",
 };
 
 export function Badge({
@@ -89,7 +90,7 @@ export function Badge({
   return (
     <span
       className={cx(
-        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium tracking-tight",
+        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
         toneStyles[tone],
       )}
     >
@@ -116,7 +117,7 @@ export function Toggle({
       <span
         className={cx(
           "relative h-6 w-11 rounded-full transition-colors duration-200",
-          checked ? "bg-violet-600" : "bg-slate-200 group-hover:bg-slate-300",
+          checked ? "bg-accent" : "bg-slate-300 group-hover:bg-slate-400",
         )}
       >
         <span
@@ -128,6 +129,48 @@ export function Toggle({
       </span>
       {label && <span className="text-sm font-medium text-slate-600">{label}</span>}
     </button>
+  );
+}
+
+/** Caps-title empty state with an icon medallion, like the reference design. */
+export function EmptyState({
+  icon,
+  title,
+  children,
+}: {
+  icon: ReactNode;
+  title: string;
+  children?: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col items-center px-6 py-14 text-center">
+      <div className="relative mb-5 grid h-20 w-20 place-items-center rounded-full bg-slate-200/70 text-4xl">
+        {icon}
+        <span className="absolute -top-1 -right-1 grid h-7 w-7 place-items-center rounded-lg bg-brand text-xs font-bold text-white">
+          0
+        </span>
+      </div>
+      <h3 className="text-lg font-extrabold uppercase tracking-wide text-ink">{title}</h3>
+      {children && <div className="mt-2 max-w-md text-sm text-slate-500">{children}</div>}
+    </div>
+  );
+}
+
+/** Decorative dashed skeleton row used under empty states (non-interactive). */
+export function SkeletonTile({ label }: { label: string }) {
+  return (
+    <div
+      aria-hidden
+      className="flex items-center gap-3 rounded-lg border-2 border-dashed border-slate-300/80 bg-slate-50/50 px-4 py-3.5"
+    >
+      <div className="grid h-9 w-9 place-items-center rounded-lg bg-slate-200/80 text-slate-400">
+        ⌗
+      </div>
+      <span className="flex-1 truncate text-sm font-medium text-slate-400">{label}</span>
+      <span className="rounded-full bg-slate-200/80 px-2.5 py-0.5 text-xs font-medium text-slate-400">
+        Inactive
+      </span>
+    </div>
   );
 }
 

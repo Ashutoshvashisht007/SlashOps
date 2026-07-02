@@ -5,7 +5,7 @@ import { Badge, Card } from "./ui";
 function levelDot(level: string): string {
   if (level === "error") return "bg-red-500";
   if (level === "warn") return "bg-amber-500";
-  return "bg-violet-500";
+  return "bg-accent";
 }
 
 export function ActionsFeed({ actions, outbox }: { actions: ActionRow[]; outbox: OutboxRow[] }) {
@@ -16,7 +16,7 @@ export function ActionsFeed({ actions, outbox }: { actions: ActionRow[]; outbox:
     <div className="space-y-4">
       <Card className="p-0 overflow-hidden">
         <div className="border-b border-slate-100 px-6 py-4">
-          <h2 className="text-base font-bold tracking-tight text-slate-900">Actions taken</h2>
+          <h2 className="text-base font-bold tracking-tight text-ink">Actions taken</h2>
           <p className="text-xs text-slate-400">Replies, mirrors, AI triage, retries</p>
         </div>
         {actions.length === 0 ? (
@@ -39,11 +39,11 @@ export function ActionsFeed({ actions, outbox }: { actions: ActionRow[]; outbox:
       </Card>
 
       <Card interactive>
-        <h2 className="text-base font-bold tracking-tight text-slate-900">Delivery health</h2>
+        <h2 className="text-base font-bold tracking-tight text-ink">Delivery health</h2>
         <p className="text-xs text-slate-400">Outbox — reliable retries for downstream calls</p>
         <div className="mt-4 grid grid-cols-2 gap-3">
           <div className="rounded-xl bg-slate-50 p-3">
-            <p className="text-2xl font-bold tracking-tight text-slate-900">{inFlight.length}</p>
+            <p className="text-2xl font-bold tracking-tight text-ink">{inFlight.length}</p>
             <p className="text-xs text-slate-500">in flight / retrying</p>
           </div>
           <div className="rounded-xl bg-slate-50 p-3">

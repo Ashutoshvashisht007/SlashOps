@@ -22,13 +22,13 @@ export function StatCards({ stats }: { stats: Stats | null }) {
             className="animate-rise p-5"
           >
             <div style={{ animationDelay: `${i * 40}ms` }}>
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 {c.label}
               </p>
               <p
                 className={
                   "mt-2 text-3xl font-bold tracking-tight " +
-                  (isFailure && value > 0 ? "text-red-600" : "text-slate-900")
+                  (isFailure && value > 0 ? "text-red-600" : "text-ink")
                 }
               >
                 {stats ? value : "—"}

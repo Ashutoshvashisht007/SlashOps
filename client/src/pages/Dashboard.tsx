@@ -7,7 +7,7 @@ import {
   type OutboxRow,
   type Stats,
 } from "../lib/api";
-import { Button, cx } from "../components/ui";
+import { cx } from "../components/ui";
 import { StatCards } from "../components/StatCards";
 import { CommandLog } from "../components/CommandLog";
 import { ActionsFeed } from "../components/ActionsFeed";
@@ -55,52 +55,73 @@ export function Dashboard({ email, onLogout }: { email: string; onLogout: () => 
   }, [refresh]);
 
   return (
-    <div className="mx-auto max-w-6xl px-5 pb-20 pt-6 sm:px-8">
-      {/* Top bar */}
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-violet-700 text-lg font-black text-white shadow-[0_8px_24px_-8px_rgba(109,40,217,0.7)]">
-            /
+    <div className="flex min-h-screen flex-col">
+      {/* ── Top bar ──────────────────────────────────────────────────────── */}
+      <header className="bg-brand text-white">
+        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-6">
+          <div className="flex items-center gap-3">
+            <span className="relative text-3xl font-black leading-none" aria-hidden>
+              /
+              <svg
+                viewBox="0 0 24 24"
+                className="absolute -bottom-0.5 -right-3 h-3.5 w-3.5 fill-white/90"
+              >
+                <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm9.4 4 1.9-1.5-2-3.4-2.3.8a8 8 0 0 0-1.7-1L17 4.5h-4l-.3 2.4a8 8 0 0 0-1.7 1l-2.3-.8-2 3.4L8.6 12l-1.9 1.5 2 3.4 2.3-.8a8 8 0 0 0 1.7 1l.3 2.4h4l.3-2.4a8 8 0 0 0 1.7-1l2.3.8 2-3.4L21.4 12Z" />
+              </svg>
+            </span>
+            <h1 className="ml-2 text-xl leading-none tracking-tight">
+              <span className="font-bold">SlashOps</span>{" "}
+              <span className="font-light text-white/85">Command Center</span>
+            </h1>
           </div>
-          <div>
-            <h1 className="text-lg font-bold leading-none tracking-tight text-slate-900">SlashOps</h1>
-            <p className="text-xs text-slate-400">Command center</p>
+
+          <div className="flex items-center gap-4">
+            <span className="hidden text-sm text-white/85 sm:inline">{email}</span>
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-white/15 text-sm font-bold uppercase">
+              {email.slice(0, 1)}
+            </span>
+            <button
+              onClick={onLogout}
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-white/90 transition-colors hover:bg-white/10 hover:text-white"
+            >
+              Log Out
+              <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-2">
+                <path d="M15 3h4a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-4M10 17l5-5-5-5M15 12H3" />
+              </svg>
+            </button>
           </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="hidden text-sm text-slate-500 sm:inline">{email}</span>
-          <Button variant="ghost" onClick={onLogout}>
-            Sign out
-          </Button>
         </div>
       </header>
 
-      {/* Tabs */}
-      <nav className="mt-8 flex gap-1 rounded-2xl border border-slate-100 bg-white/70 p-1 shadow-[var(--shadow-float)] backdrop-blur-sm sm:w-fit">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={cx(
-              "rounded-xl px-5 py-2 text-sm font-semibold transition-all duration-200",
-              tab === t.id
-                ? "bg-violet-700 text-white shadow-[0_6px_18px_-8px_rgba(109,40,217,0.7)]"
-                : "text-slate-500 hover:bg-slate-100 hover:text-slate-800",
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
+      {/* ── Tab strip ────────────────────────────────────────────────────── */}
+      <nav className="border-b border-slate-300 bg-chrome">
+        <div className="mx-auto flex w-full max-w-7xl items-center gap-8 px-6">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={cx(
+                "-mb-px border-b-4 py-3.5 text-base font-semibold transition-colors duration-150",
+                tab === t.id
+                  ? "border-ink text-ink"
+                  : "border-transparent text-slate-600 hover:text-ink",
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </nav>
 
-      <main className="mt-6">
+      {/* ── Content ──────────────────────────────────────────────────────── */}
+      <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">
         {tab === "live" && (
           <div className="space-y-6">
             <StatCards stats={stats} />
 
             {guilds.length > 0 && (
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Server
                 </span>
                 <ScopePill active={scope === null} onClick={() => setScope(null)}>
@@ -128,6 +149,12 @@ export function Dashboard({ email, onLogout }: { email: string; onLogout: () => 
 
         {tab === "servers" && <ServersPanel guilds={guilds} onChanged={loadGuilds} />}
       </main>
+
+      {/* ── Footer ───────────────────────────────────────────────────────── */}
+      <footer className="py-5 text-center text-sm text-slate-500">
+        Copyright © <span className="font-semibold text-slate-600">slashops</span> · All rights
+        reserved.
+      </footer>
     </div>
   );
 }
@@ -145,10 +172,10 @@ function ScopePill({
     <button
       onClick={onClick}
       className={cx(
-        "rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-200",
+        "rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-150",
         active
-          ? "bg-slate-900 text-white shadow-sm"
-          : "bg-white text-slate-500 border border-slate-100 hover:border-slate-200 hover:text-slate-800",
+          ? "bg-brand text-white"
+          : "border border-slate-300 bg-white text-slate-600 hover:border-slate-400 hover:text-ink",
       )}
     >
       {children}
