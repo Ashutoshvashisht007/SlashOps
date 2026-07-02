@@ -62,7 +62,15 @@ async function fail(job: ClaimedJob, err: unknown): Promise<void> {
   const attempts = job.attempts + 1;
   const message = err instanceof Error ? err.message : String(err);
   const exhausted = attempts >= job.max_attempts;
-  const backoff = Math.min(BASE_BACKOFF_MS * 2 ** job.attempts, MAX_BACKOFF_MS);
+  // Rate-limited? Wait exactly as long as Discord asked (+ a second of slack)
+  // rather than blindly re-entering the same rate-limit window. Blind backoff
+  // against a minutes-long shared-IP 429 burns every attempt for nothing.
+  const retryAfterMs = (err as { retryAfterMs?: number } | null)?.retryAfterMs;
+  const exponential = Math.min(BASE_BACKOFF_MS * 2 ** job.attempts, MAX_BACKOFF_MS);
+  const backoff =
+    typeof retryAfterMs === "number" && Number.isFinite(retryAfterMs)
+      ? Math.max(retryAfterMs + 1_000, exponential)
+      : exponential;
 
   await db.execute(sql`
     UPDATE outbox

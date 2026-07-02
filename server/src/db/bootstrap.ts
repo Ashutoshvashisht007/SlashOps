@@ -64,13 +64,16 @@ CREATE TABLE IF NOT EXISTS outbox (
   payload         JSONB NOT NULL DEFAULT '{}'::jsonb,
   status          TEXT NOT NULL DEFAULT 'pending',
   attempts        INTEGER NOT NULL DEFAULT 0,
-  max_attempts    INTEGER NOT NULL DEFAULT 6,
+  max_attempts    INTEGER NOT NULL DEFAULT 8,
   next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   last_error      TEXT,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS outbox_due_idx ON outbox (status, next_attempt_at);
+-- Existing deployments predate the 6 → 8 attempt-budget bump (rate-limit
+-- resilience); CREATE IF NOT EXISTS won't touch them, so align explicitly.
+ALTER TABLE outbox ALTER COLUMN max_attempts SET DEFAULT 8;
 
 CREATE TABLE IF NOT EXISTS action_log (
   id             SERIAL PRIMARY KEY,

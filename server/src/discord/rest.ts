@@ -8,10 +8,28 @@ export class DiscordApiError extends Error {
     message: string,
     readonly status: number,
     readonly body: string,
+    /** When Discord said to come back (429s) — lets the outbox wait exactly
+     *  that long instead of blindly re-entering the rate-limit window. */
+    readonly retryAfterMs?: number,
   ) {
     super(message);
     this.name = "DiscordApiError";
   }
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** Extract Retry-After from headers (seconds) or a JSON body's retry_after. */
+function parseRetryAfterMs(res: Response, bodyText: string): number | undefined {
+  const header = Number(res.headers.get("retry-after"));
+  if (Number.isFinite(header) && header > 0) return Math.ceil(header * 1000);
+  try {
+    const j = JSON.parse(bodyText) as { retry_after?: number };
+    if (typeof j.retry_after === "number") return Math.ceil(j.retry_after * 1000);
+  } catch {
+    /* not JSON */
+  }
+  return undefined;
 }
 
 /**
@@ -37,13 +55,18 @@ async function discordFetch(
   let res = await doFetch();
   if (res.status === 429) {
     const retryAfter = Number(res.headers.get("retry-after") ?? "1");
-    await new Promise((r) => setTimeout(r, Math.min(retryAfter, 5) * 1000));
+    await sleep(Math.min(retryAfter, 5) * 1000);
     res = await doFetch();
   }
 
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    throw new DiscordApiError(`Discord ${res.status} on ${path}`, res.status, body);
+    throw new DiscordApiError(
+      `Discord ${res.status} on ${path}`,
+      res.status,
+      body,
+      res.status === 429 ? parseRetryAfterMs(res, body) : undefined,
+    );
   }
   const text = await res.text();
   return text ? JSON.parse(text) : null;
@@ -75,16 +98,41 @@ export function postToChannel(channelId: string, body: unknown): Promise<unknown
   });
 }
 
-/** Send the mirror notification to a Discord channel webhook URL. */
+/**
+ * Send the mirror notification to a Discord channel webhook URL.
+ * Rate-limit aware: a short 429 is absorbed in place; a long one throws with
+ * retryAfterMs so the outbox schedules the next attempt for when Discord
+ * actually wants us back (shared-IP hosts like Render inherit other tenants'
+ * webhook rate limits, so these can run minutes long).
+ */
 export async function postToWebhook(webhookUrl: string, body: unknown): Promise<void> {
-  const res = await fetch(webhookUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  const doFetch = () =>
+    fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+  let res = await doFetch();
+  if (res.status === 429) {
+    const text = await res.text().catch(() => "");
+    const retryAfterMs = parseRetryAfterMs(res, text);
+    if (retryAfterMs !== undefined && retryAfterMs <= 5_000) {
+      await sleep(retryAfterMs);
+      res = await doFetch();
+    } else {
+      throw new DiscordApiError("Webhook 429 (rate limited)", 429, text, retryAfterMs);
+    }
+  }
+
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new DiscordApiError(`Webhook ${res.status}`, res.status, text);
+    throw new DiscordApiError(
+      `Webhook ${res.status}`,
+      res.status,
+      text,
+      res.status === 429 ? parseRetryAfterMs(res, text) : undefined,
+    );
   }
 }
 

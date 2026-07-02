@@ -108,7 +108,7 @@ export const outbox = pgTable(
     payload: jsonb("payload").notNull().default({}),
     status: text("status").notNull().default("pending"), // pending|processing|done|failed
     attempts: integer("attempts").notNull().default(0),
-    maxAttempts: integer("max_attempts").notNull().default(6),
+    maxAttempts: integer("max_attempts").notNull().default(8),
     nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }).notNull().defaultNow(),
     lastError: text("last_error"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
