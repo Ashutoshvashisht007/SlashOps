@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   api,
   type CommandRule,
@@ -35,14 +35,19 @@ function CommandConfigCard({
   const [keywords, setKeywords] = useState((effective.flagKeywords ?? []).join(", "));
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  // Guard against a background refetch clobbering in-progress edits: once the
+  // user touches the form, server → state syncs are suspended until save.
+  const dirty = useRef(false);
 
   useEffect(() => {
+    if (dirty.current) return;
     setEnabled(row?.enabled ?? true);
     setRule(effective);
     setKeywords((effective.flagKeywords ?? []).join(", "));
   }, [effective, row]);
 
   function set<K extends keyof CommandRule>(key: K, value: Required<CommandRule>[K]) {
+    dirty.current = true;
     setRule((r) => ({ ...r, [key]: value }));
   }
 
@@ -62,6 +67,7 @@ function CommandConfigCard({
             .filter(Boolean),
         },
       });
+      dirty.current = false; // saved — future server syncs are welcome again
       setSaved(true);
       onSaved();
     } finally {
@@ -79,7 +85,14 @@ function CommandConfigCard({
           </div>
           <p className="mt-0.5 text-xs text-slate-400">{meta.description}</p>
         </div>
-        <Toggle checked={enabled} onChange={setEnabled} label={enabled ? "Enabled" : "Disabled"} />
+        <Toggle
+          checked={enabled}
+          onChange={(v) => {
+            dirty.current = true;
+            setEnabled(v);
+          }}
+          label={enabled ? "Enabled" : "Disabled"}
+        />
       </div>
 
       <div className="mt-5 grid gap-4">
@@ -103,7 +116,13 @@ function CommandConfigCard({
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Flag keywords (comma-separated)
             </label>
-            <Input value={keywords} onChange={(e) => setKeywords(e.target.value)} />
+            <Input
+              value={keywords}
+              onChange={(e) => {
+                dirty.current = true;
+                setKeywords(e.target.value);
+              }}
+            />
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -142,9 +161,14 @@ export function ConfigPanel({
   const [commands, setCommands] = useState<CommandMeta[]>([]);
   const [defaultRule, setDefaultRule] = useState<Required<CommandRule> | null>(null);
   const [configs, setConfigs] = useState<ConfigRow[]>([]);
+  const [configsLoaded, setConfigsLoaded] = useState(false);
 
   const load = () => {
-    api.configs(guildId).then(setConfigs).catch(() => setConfigs([]));
+    api
+      .configs(guildId)
+      .then(setConfigs)
+      .catch(() => setConfigs([]))
+      .finally(() => setConfigsLoaded(true));
   };
 
   useEffect(() => {
@@ -153,7 +177,11 @@ export function ConfigPanel({
       setDefaultRule(r.defaultRule);
     });
   }, []);
-  useEffect(load, [guildId]);
+  useEffect(() => {
+    setConfigsLoaded(false); // scope switch → hold cards until fresh rows land
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guildId]);
 
   return (
     <div className="space-y-5">
@@ -178,11 +206,11 @@ export function ConfigPanel({
         </select>
       </Card>
 
-      {defaultRule && (
+      {defaultRule && configsLoaded && (
         <div className="grid gap-4 lg:grid-cols-2">
           {commands.map((meta) => (
             <CommandConfigCard
-              key={meta.name}
+              key={`${guildId ?? "global"}:${meta.name}`}
               meta={meta}
               row={configs.find((c) => c.commandName === meta.name)}
               defaultRule={defaultRule}

@@ -9,3 +9,7 @@ server/dist/
 client/dist/
 coverage/
 .vscode/
+
+# playwright
+test-results/
+playwright-report/
