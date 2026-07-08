@@ -132,6 +132,21 @@ function CommandConfigCard({
           </div>
         </div>
 
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Required role ID
+          </label>
+          <Input
+            value={rule.requiredRoleId ?? ""}
+            onChange={(e) => set("requiredRoleId", e.target.value)}
+            placeholder="Leave empty for no restriction"
+          />
+          <p className="text-xs text-slate-400">
+            Only members with this Discord role may run the command. In Discord: enable Developer
+            Mode, then right-click the role → Copy Role ID.
+          </p>
+        </div>
+
         <div className="flex flex-wrap gap-x-6 gap-y-3 rounded-xl bg-slate-50 px-4 py-3">
           <Toggle checked={rule.mirrorEnabled} onChange={(v) => set("mirrorEnabled", v)} label="Mirror" />
           <Toggle checked={rule.aiEnabled} onChange={(v) => set("aiEnabled", v)} label="AI triage" />
