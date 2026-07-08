@@ -11,6 +11,7 @@ import {
   ButtonStyle,
   ComponentType,
   interactionUser,
+  memberRoles,
   type Interaction,
 } from "../discord/types";
 import {
@@ -142,6 +143,26 @@ async function handleCommand(interaction: Interaction, res: Response): Promise<v
       commandName: name,
     });
     res.json(ephemeral(`\`/${name}\` is currently disabled by an admin.`));
+    return;
+  }
+
+  // Role gate: if a required role is configured, only members holding it may
+  // proceed. Discord gives us the member's role ids in the payload, so we can
+  // decide here without a REST call — well inside the 3s window.
+  const requiredRoleId = config.rule.requiredRoleId.trim();
+  if (requiredRoleId && !memberRoles(interaction).includes(requiredRoleId)) {
+    await recordInteractionOnce({
+      id: interaction.id,
+      type: interaction.type,
+      guildId,
+      channelId: interaction.channel_id,
+      userId: user?.id,
+      userName: user?.username,
+      commandName: name,
+    });
+    res.json(
+      ephemeral(`⛔ You don't have access to \`/${name}\`. Ask an admin for the required role.`),
+    );
     return;
   }
 

@@ -11,6 +11,12 @@ export interface CommandRule {
   aiEnabled?: boolean;
   flagKeywords?: string[];
   flagLabel?: string;
+  /**
+   * Gate: if set, only members holding this Discord role id may run the command.
+   * Empty string / unset = open to everyone. Copy the id from Discord via
+   * Developer Mode → right-click role → Copy Role ID.
+   */
+  requiredRoleId?: string;
 }
 
 export const DEFAULT_RULE: Required<Omit<CommandRule, "replyTemplate">> & {
@@ -23,6 +29,7 @@ export const DEFAULT_RULE: Required<Omit<CommandRule, "replyTemplate">> & {
   aiEnabled: true,
   flagKeywords: ["urgent", "outage", "down", "security", "breach", "hack", "critical"],
   flagLabel: "priority",
+  requiredRoleId: "",
 };
 
 export interface RuleResult {
@@ -52,6 +59,7 @@ export function withDefaults(rule: CommandRule | null | undefined): Required<Com
     aiEnabled: rule?.aiEnabled ?? DEFAULT_RULE.aiEnabled,
     flagKeywords: rule?.flagKeywords ?? DEFAULT_RULE.flagKeywords,
     flagLabel: rule?.flagLabel ?? DEFAULT_RULE.flagLabel,
+    requiredRoleId: rule?.requiredRoleId ?? DEFAULT_RULE.requiredRoleId,
   };
 }
 

@@ -59,7 +59,7 @@ export interface Interaction {
   token: string;
   guild_id?: string;
   channel_id?: string;
-  member?: { user: InteractionUser };
+  member?: { user: InteractionUser; roles?: string[] };
   user?: InteractionUser;
   data?: {
     id?: string;
@@ -75,4 +75,12 @@ export interface Interaction {
 
 export function interactionUser(i: Interaction): InteractionUser | undefined {
   return i.member?.user ?? i.user;
+}
+
+/**
+ * The role ids the invoking member holds. Only present for guild interactions —
+ * in a DM there is no member, so this is an empty list.
+ */
+export function memberRoles(i: Interaction): string[] {
+  return i.member?.roles ?? [];
 }

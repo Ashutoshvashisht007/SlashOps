@@ -85,6 +85,7 @@ export interface CommandRule {
   aiEnabled?: boolean;
   flagKeywords?: string[];
   flagLabel?: string;
+  requiredRoleId?: string;
 }
 
 export interface ConfigRow {
