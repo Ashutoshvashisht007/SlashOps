@@ -155,6 +155,7 @@ const configUpsert = z.object({
       aiEnabled: z.boolean().optional(),
       flagKeywords: z.array(z.string().max(40)).max(30).optional(),
       flagLabel: z.string().max(40).optional(),
+      requiredRoleId: z.string().trim().max(40).optional(),
     })
     .optional(),
 });
